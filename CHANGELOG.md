@@ -42,7 +42,7 @@ characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
   files to a public storage (one per dashboard, created if missing) and
   points a dashboard at the entry page with `?v=` against stale caches, or,
   with `target`, writes the `dashboard` property of a device, product,
-  asset type or project (checked before anything is uploaded).
+  asset type, asset group or project (checked before anything is uploaded).
 - The dashboard SDK reference, read from the server's
   `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
   and in `resource_describe` of the dashboard type.
