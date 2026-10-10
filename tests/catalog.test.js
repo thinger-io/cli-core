@@ -148,7 +148,7 @@ describe('resource tools', () => {
     });
 
     it('stay a short list', () => {
-        assert.ok(tools.length <= 24, `${tools.length} tools`);
+        assert.ok(tools.length <= 25, `${tools.length} tools`);
     });
 
     it('describe types without a server, from the catalog', async () => {

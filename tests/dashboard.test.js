@@ -13,7 +13,8 @@ import {
     unhashedAssets,
 } from '../lib/dashboard.js';
 import { CATALOG } from '../lib/mcp/catalog.js';
-import { buildResources, buildTools } from '../lib/mcp/registry.js';
+import { buildTools, listResources, readResource } from '../lib/mcp/registry.js';
+import { FALLBACK_DOCS, docMimeType, validDoc } from '../lib/docs.js';
 
 describe('dashboard files', () => {
     it('collects a folder recursively, without hidden entries or node_modules', () => {
@@ -130,12 +131,29 @@ describe('dashboard publishing', () => {
 });
 
 describe('dashboard MCP surface', () => {
-    it('serves the SDK reference as a resource under the CLI prefix', () => {
-        const [concepts, sdk, types] = buildResources();
-        assert.equal(concepts.uri, 'acme://concepts');
-        assert.equal(sdk.uri, 'acme://dashboard-sdk');
-        assert.equal(types.uri, 'acme://dashboard-sdk-types');
-        assert.match(sdk.description, /acme_dashboard_publish/);
+    it('lists the known documents as resources when no server can be read', async () => {
+        // No profile is configured in the tests: the index cannot be fetched.
+        const resources = await listResources();
+        assert.deepEqual(
+            resources.map((r) => r.uri),
+            FALLBACK_DOCS.map((d) => `acme://${d.id}`),
+        );
+        assert.match(resources[0].description, /acme_doc_read/);
+        assert.equal(resources[0].mimeType, 'text/markdown');
+        await assert.rejects(readResource('other://concepts'), /Unknown resource/);
+    });
+
+    // The index comes from the server: it must not be able to send the CLI
+    // (and its token) to another host, or out of the server's paths.
+    it('only follows document paths on the same server', () => {
+        const doc = (path) => ({ id: 'x', title: 'X', path });
+        assert.ok(validDoc(doc('/sdk/guide.md')));
+        assert.ok(!validDoc(doc('https://evil.example/guide.md')));
+        assert.ok(!validDoc(doc('//evil.example/guide.md')));
+        assert.ok(!validDoc(doc('/sdk/../v1/users/me')));
+        assert.ok(!validDoc(doc('sdk/guide.md')));
+        assert.ok(!validDoc({ id: '../x', path: '/sdk/x.md' }));
+        assert.equal(docMimeType('typescript'), 'text/plain');
     });
 
     // Catalog notes are expanded at run time, not by the registry: check

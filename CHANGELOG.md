@@ -3,8 +3,8 @@
 ## [0.2.0] - 2026-10-10
 
 Incompatible change of the MCP tools: from 48 tools, one per type and
-operation, to 24, less than half the size in `tools/list` (21,600
-characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
+operation, to 25, less than half the size in `tools/list` (22,900
+characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
 
 ### Added
 
@@ -47,13 +47,14 @@ characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
   initial hash route. One storage can serve an app shared by many
   dashboards. Entry urls carry `?v=` against stale caches; scripts and
   styles without a content hash are reported.
-- The dashboard SDK reference, read from the server's
-  `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
-  and in `resource_describe` of the dashboard type; its TypeScript
-  declarations (`/sdk/thinger-dashboard.d.ts`) as `<prefix>://dashboard-sdk-types`.
-- The server's guide to platform concepts (`/sdk/thinger-concepts.md`) as the
-  MCP resource `<prefix>://concepts`, and appended to `resource_describe`
-  without a type (the overview call) on servers that publish it.
+- `doc_read`: the documentation the server publishes for agents, listed in
+  its index (`/sdk/docs.json`): a guide to the platform's concepts, the
+  dashboard SDK reference, its TypeScript declarations… A guide added to the
+  index reaches the model without a CLI release. The same documents are MCP
+  resources (`<prefix>://<id>`), the concepts guide is appended to
+  `resource_describe` without a type, and the SDK reference to
+  `resource_describe` of the dashboard type. Only paths on the profile's own
+  server are followed.
 - `scripts/catalog-draft.js`: drafts catalog entries from an OpenAPI
   document.
 

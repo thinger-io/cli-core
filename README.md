@@ -18,11 +18,11 @@ It holds everything that is not specific to a product:
   account path built in `paths`.
 - **Generic commands** (`cli`, `commands/*`) — login, logout, profile, device,
   product, bucket, mcp.
-- **MCP** (`mcp/*`) — the stdio server and 24 generic tools: seven
+- **MCP** (`mcp/*`) — the stdio server and 25 generic tools: seven
   `resource_*` tools over a catalog of the server's resource types, and the
   operations that are not CRUD (bucket data, device resources, storage
-  files, dashboard publishing…), plus the dashboard SDK reference as an MCP
-  resource.
+  files, dashboard publishing, the server's documentation…), plus that
+  documentation as MCP resources.
 - **OpenAPI** (`openapi`) — the server's own API description, cached per
   server and version, with a bundled copy as fallback.
 
