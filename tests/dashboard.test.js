@@ -14,7 +14,14 @@ import {
 } from '../lib/dashboard.js';
 import { CATALOG } from '../lib/mcp/catalog.js';
 import { buildTools, listResources, readResource } from '../lib/mcp/registry.js';
-import { FALLBACK_DOCS, docMimeType, validDoc } from '../lib/docs.js';
+import {
+    FALLBACK_DOCS,
+    defineCliDocs,
+    docMimeType,
+    listDocs,
+    readDoc,
+    validDoc,
+} from '../lib/docs.js';
 
 describe('dashboard files', () => {
     it('collects a folder recursively, without hidden entries or node_modules', () => {
@@ -141,6 +148,31 @@ describe('dashboard MCP surface', () => {
         assert.match(resources[0].description, /acme_doc_read/);
         assert.equal(resources[0].mimeType, 'text/markdown');
         await assert.rejects(readResource('other://concepts'), /Unknown resource/);
+    });
+
+    // A CLI ships its own guides: they are listed and read even when no
+    // server can be reached (no profile in the tests), first in the list.
+    it("serves the CLI's own guides next to the server's", async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'docs-'));
+        fs.writeFileSync(path.join(dir, 'guide.md'), '# Acme guide');
+        defineCliDocs([
+            { id: 'acme-guide', title: 'Acme guide', file: path.join(dir, 'guide.md') },
+        ]);
+        try {
+            const docs = await listDocs();
+            assert.deepEqual(
+                docs.map((d) => d.id),
+                ['acme-guide'],
+            );
+            assert.equal((await readDoc('acme-guide')).text, '# Acme guide');
+            await assert.rejects(readDoc('nope'), /Unknown document "nope". Available: acme-guide/);
+            const resources = await listResources();
+            assert.equal(resources[0].uri, 'acme://acme-guide');
+            assert.equal((await readResource('acme://acme-guide')).text, '# Acme guide');
+        } finally {
+            defineCliDocs([]);
+        }
+        assert.throws(() => defineCliDocs([{ id: 'x' }]), /needs id, title and file/);
     });
 
     // The index comes from the server: it must not be able to send the CLI

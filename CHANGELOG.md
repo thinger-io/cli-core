@@ -54,7 +54,8 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
   resources (`<prefix>://<id>`), the concepts guide is appended to
   `resource_describe` without a type, and the SDK reference to
   `resource_describe` of the dashboard type. Only paths on the profile's own
-  server are followed.
+  server are followed. CLIs add the guides they ship with
+  `runCli({ docs })`, listed first and readable without a server.
 - `scripts/catalog-draft.js`: drafts catalog entries from an OpenAPI
   document.
 
