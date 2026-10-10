@@ -1,0 +1,29 @@
+import js from '@eslint/js';
+import globals from 'globals';
+import prettierConfig from 'eslint-config-prettier';
+
+export default [
+    { ignores: ['node_modules/**', 'package-lock.json'] },
+    js.configs.recommended,
+    {
+        languageOptions: {
+            ecmaVersion: 2023,
+            sourceType: 'module',
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            'no-empty': ['error', { allowEmptyCatch: true }],
+            'no-unused-vars': [
+                'warn',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrors: 'none',
+                },
+            ],
+        },
+    },
+    prettierConfig,
+];
