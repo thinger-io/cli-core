@@ -37,12 +37,16 @@ characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
   `device_stats`, `device_overview`, `product_resource_call`,
   `product_export`, `endpoint_call`, `alarm_rule_test`,
   `storage_file_list` / `_read` / `_write` / `_delete`.
-- `dashboard_publish`: publishes an HTML app as a url-source dashboard
-  (servers with url-source dashboards): uploads a local folder or inline
-  files to a public storage (one per dashboard, created if missing) and
-  points a dashboard at the entry page with `?v=` against stale caches, or,
-  with `target`, writes the `dashboard` property of a device, product,
-  asset type, asset group or project (checked before anything is uploaded).
+- `dashboard_publish`: publishes HTML apps as url-source dashboards
+  (servers with url-source dashboards). Uploads a local folder (a build
+  output, subfolders included) or inline files to a public storage, with
+  `prune` to delete files a new build no longer has; and/or points
+  dashboards at it: dashboards of the collection, or the `dashboard`
+  property of a device, product, asset type, asset group or project
+  (checked before anything is uploaded), each with its own entry page and
+  initial hash route. One storage can serve an app shared by many
+  dashboards. Entry urls carry `?v=` against stale caches; scripts and
+  styles without a content hash are reported.
 - The dashboard SDK reference, read from the server's
   `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
   and in `resource_describe` of the dashboard type.

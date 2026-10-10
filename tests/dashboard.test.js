@@ -5,7 +5,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { collectFiles, defaultStorage, publishDashboard } from '../lib/dashboard.js';
+import {
+    collectFiles,
+    defaultStorage,
+    entryUrl,
+    publishApp,
+    unhashedAssets,
+} from '../lib/dashboard.js';
 import { CATALOG } from '../lib/mcp/catalog.js';
 import { buildResources, buildTools } from '../lib/mcp/registry.js';
 
@@ -52,27 +58,73 @@ describe('dashboard publishing', () => {
     const files = { 'index.html': '<html></html>' };
 
     // Validation happens before any request, so these need no server.
-    it('needs exactly one of dashboard or target', async () => {
-        await assert.rejects(publishDashboard({ files }), /either dashboard or target/);
+    it('needs something to do', async () => {
+        await assert.rejects(publishApp({}), /nothing to do/);
+        await assert.rejects(publishApp({ files: {} }), /no files/);
         await assert.rejects(
-            publishDashboard({ dashboard: 'd', target: { type: 'device', id: 'x' }, files }),
-            /either dashboard or target/,
+            publishApp({ to: [{ dashboard: 'd' }], prune: true }),
+            /prune needs the files/,
         );
     });
 
-    it('checks the target type, the ids and the entry page', async () => {
+    it('checks each destination', async () => {
         await assert.rejects(
-            publishDashboard({ target: { type: 'bucket', id: 'b' }, files }),
-            /target.type must be one of/,
-        );
-        await assert.rejects(publishDashboard({ dashboard: 'bad id', files }), /invalid id/);
-        await assert.rejects(
-            publishDashboard({ dashboard: 'd', files: { 'app.js': '' } }),
-            /no entry page "index.html"/,
+            publishApp({ files, to: [{}] }),
+            /either \{dashboard\} or \{type, id\}/,
         );
         await assert.rejects(
-            publishDashboard({ dashboard: 'd', files, storage: 'no spaces allowed' }),
+            publishApp({ files, to: [{ dashboard: 'd', type: 'device', id: 'x' }] }),
+            /either \{dashboard\} or \{type, id\}/,
+        );
+        await assert.rejects(
+            publishApp({ files, to: [{ type: 'bucket', id: 'b' }] }),
+            /type must be one of/,
+        );
+        await assert.rejects(publishApp({ files, to: [{ dashboard: 'bad id' }] }), /invalid id/);
+        await assert.rejects(
+            publishApp({ files, to: [{ dashboard: 'd', entry: '/index.html' }] }),
+            /entry is a path inside the storage/,
+        );
+    });
+
+    it('needs a storage name for an app shared by several destinations', async () => {
+        await assert.rejects(
+            publishApp({ files, to: [{ dashboard: 'a' }, { dashboard: 'b' }] }),
+            /pass storage/,
+        );
+        await assert.rejects(
+            publishApp({ files, storage: 'no spaces allowed', to: [{ dashboard: 'd' }] }),
             /invalid storage id/,
+        );
+    });
+
+    it('builds versioned entry urls with an optional hash route', () => {
+        assert.equal(
+            entryUrl('acme', 'app_plant', { entry: 'pages/device view.html' }, 42),
+            '/v1/users/acme/storages/app_plant/files/pages/device%20view.html?v=42',
+        );
+        assert.equal(
+            entryUrl('acme', 'app_plant', { route: '/devices/gw1' }, 42),
+            '/v1/users/acme/storages/app_plant/files/index.html?v=42#/devices/gw1',
+        );
+        assert.equal(
+            entryUrl('acme', 'app_plant', { route: '#/x' }, 1),
+            '/v1/users/acme/storages/app_plant/files/index.html?v=1#/x',
+        );
+    });
+
+    it('flags scripts and styles without a content hash', () => {
+        assert.deepEqual(
+            unhashedAssets([
+                'index.html',
+                'main-4QXZ7J2K.js',
+                'chunk-AB12CD34.js',
+                'styles.9f8e7d6c.css',
+                'app.js',
+                'css/style.css',
+                'assets/logo.png',
+            ]),
+            ['app.js', 'css/style.css'],
         );
     });
 });
