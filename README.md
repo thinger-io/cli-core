@@ -18,7 +18,12 @@ It holds everything that is not specific to a product:
   account path built in `paths`.
 - **Generic commands** (`cli`, `commands/*`) — login, logout, profile, device,
   product, bucket, mcp.
-- **MCP** (`mcp/*`) — the stdio server and ~50 generic tools.
+- **MCP** (`mcp/*`) — the stdio server and 23 generic tools: seven
+  `resource_*` tools over a catalog of the server's resource types, and the
+  operations that are not CRUD (bucket data, device resources, storage
+  files…).
+- **OpenAPI** (`openapi`) — the server's own API description, cached per
+  server and version, with a bundled copy as fallback.
 
 ## Identity
 
@@ -38,7 +43,7 @@ defineIdentity({
     token: { id: 'acme_cli', name: 'Acme CLI' }, // minted by the password login
     oauth: { clientId: null }, // OAuth device-flow client, if the platform ships one
     defaultServer: null, // suggested by the login prompt
-    mcp: { serverName: 'acme', toolPrefix: 'acme' }, // tools become acme_devices, …
+    mcp: { serverName: 'acme', toolPrefix: 'acme' }, // tools become acme_resource_list, …
     productTemplate: {}, // optional defaults for new products
 });
 
@@ -58,10 +63,38 @@ servers.
 - `onNoCommand(program)` — what to do when called without arguments
   (default: help).
 - `mcpTools` — the CLI's own MCP tools, declared with bare names
-  (`name: 'exec'`) and referring to others in descriptions as
-  `{tool:devices}` or `{family:token}`. Unknown references fail at startup.
-  A tool flagged `replaces: true` swaps out the generic tool of the same name.
+  (`name: 'device_exec'`) and referring to others in descriptions as
+  `{tool:resource_list}` or `{family:storage_file}`. Unknown references fail
+  at startup. A tool flagged `replaces: true` swaps out the generic tool of
+  the same name.
+- `resourceHooks` — the CLI's hooks on catalog types (`{ product: {
+afterDelete } }`), run after the core's: see `mcp/resource-hooks.js`.
 - `mcpInstructions` — server-level guidance sent to MCP clients.
+
+`<cli> mcp --admin` (or `<PREFIX>_MCP_ADMIN=1`) also serves the
+administration types: roles, syncs, project members and project roles.
+
+## MCP tools
+
+Tool names follow `<object>[_<subobject>]_<verb>`, with the verbs list, get,
+describe, create, update, delete, clone, call, read, write, send.
+
+The server's collections are reached through seven generic tools —
+`resource_describe`, `resource_list`, `resource_get`, `resource_create`,
+`resource_update`, `resource_delete`, `resource_clone` — that take a `type`
+from the catalog (`lib/mcp/catalog.js`), a `parent` for child types and an
+`id`. The catalog is a reviewed table, never discovered at run time: each
+type has its path, API version, parent, id and the verbs it allows, with the
+server's operationId for each (the tests check them against the bundled
+OpenAPI document). `resource_describe` reads the request schemas and
+examples from the OpenAPI document of the server the profile points at.
+
+To draft catalog entries after an API change:
+
+```bash
+curl -s https://<server>/v1/server/swagger.json -o openapi/swagger.json
+node scripts/catalog-draft.js
+```
 
 Modules are imported by path: `@thinger-io/cli-core/api`,
 `@thinger-io/cli-core/mcp/registry`, …

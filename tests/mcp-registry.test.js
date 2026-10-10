@@ -40,9 +40,9 @@ describe('mcp registry', () => {
         }
     });
 
-    it('every tool (except profiles) has the injected `profile` option', () => {
+    it('every tool (except profile_list) has the injected `profile` option', () => {
         for (const t of tools) {
-            if (t.name === 'acme_profiles') continue;
+            if (t.name === 'acme_profile_list') continue;
             assert.ok(
                 t.inputSchema.properties?.profile,
                 `${t.name} is missing the injected profile param`,
@@ -59,7 +59,7 @@ describe('mcp registry', () => {
     });
 
     it('leaves the declarations untouched, so building twice is stable', () => {
-        assert.ok(genericTools.every((t) => !t.name.startsWith('acme_')));
+        assert.ok(genericTools().every((t) => !t.name.startsWith('acme_')));
         assert.deepEqual(
             buildTools().map((t) => t.name),
             tools.map((t) => t.name),
@@ -69,29 +69,32 @@ describe('mcp registry', () => {
     it('adds CLI-specific tools and rejects duplicates', () => {
         const extra = {
             name: 'hello',
-            description: 'Says hello; see {tool:devices}.',
+            description: 'Says hello; see {tool:resource_list}.',
             inputSchema: { type: 'object', properties: {} },
             handler: async () => ({ content: [] }),
         };
         const built = buildTools([extra]);
         const hello = built.find((t) => t.name === 'acme_hello');
-        assert.equal(hello.description, 'Says hello; see acme_devices.');
-        assert.throws(() => buildTools([{ ...extra, name: 'devices' }]), /Duplicate MCP tool name/);
+        assert.equal(hello.description, 'Says hello; see acme_resource_list.');
+        assert.throws(
+            () => buildTools([{ ...extra, name: 'resource_list' }]),
+            /Duplicate MCP tool name/,
+        );
         assert.throws(() => buildTools([extra, extra]), /Duplicate MCP tool name/);
     });
 
     it('lets a CLI replace a generic tool when it says so', () => {
         const mine = {
-            name: 'device_info',
+            name: 'device_stats',
             replaces: true,
-            description: 'Platform-specific device info.',
+            description: 'Platform-specific device stats.',
             inputSchema: { type: 'object', properties: {} },
             handler: async () => ({ content: [] }),
         };
         const built = buildTools([mine]);
-        const info = built.filter((t) => t.name === 'acme_device_info');
+        const info = built.filter((t) => t.name === 'acme_device_stats');
         assert.equal(info.length, 1);
-        assert.equal(info[0].description, 'Platform-specific device info.');
+        assert.equal(info[0].description, 'Platform-specific device stats.');
         assert.ok(!('replaces' in info[0]));
         assert.throws(
             () => buildTools([{ ...mine, name: 'not_generic' }]),
