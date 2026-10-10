@@ -31,7 +31,8 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
   needs (`permissions`: `Device` / `ReadDeviceStatus`…), taken from the same
   document.
 - Resource hooks: generated device credentials, the identity's product
-  template, token expiries as durations ("30d") and permission tree checks.
+  template, device token expiries as durations ("30d") and permission tree
+  checks.
   CLIs add theirs with `runCli({ resourceHooks })`.
 - Plugins: type `plugin` (installed by default; the installable catalog
   with filter `available`, summarised) with actions install, upgrade,
