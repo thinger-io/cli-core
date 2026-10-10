@@ -26,8 +26,8 @@ characters instead of 51,400, roughly 6,100 tokens instead of 14,300).
 - `resource_describe` reads the request schemas and examples from the
   server's own OpenAPI document (`/v1/server/swagger.json`), cached per
   server and version in `~/.config/<cli>/cache`; servers that do not publish
-  it fall back to the bundled copy (`openapi/swagger.json`, server
-  7.2.4-beta). It also lists, for each verb, the permission action a token
+  it fall back to the bundled copy (`openapi/swagger.json`, the server's
+  develop as of 2026-10-10). It also lists, for each verb, the permission action a token
   needs (`permissions`: `Device` / `ReadDeviceStatus`…), taken from the same
   document.
 - Resource hooks: generated device credentials, the identity's product
