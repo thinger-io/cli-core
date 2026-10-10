@@ -3,8 +3,8 @@
 ## [0.2.0] - 2026-10-10
 
 Incompatible change of the MCP tools: from 48 tools, one per type and
-operation, to 23, about a third of the size in `tools/list` (19,500
-characters instead of 51,400, roughly 5,400 tokens instead of 14,300).
+operation, to 24, less than half the size in `tools/list` (21,600
+characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
 
 ### Added
 
@@ -37,6 +37,15 @@ characters instead of 51,400, roughly 5,400 tokens instead of 14,300).
   `device_stats`, `device_overview`, `product_resource_call`,
   `product_export`, `endpoint_call`, `alarm_rule_test`,
   `storage_file_list` / `_read` / `_write` / `_delete`.
+- `dashboard_publish`: publishes an HTML app as a url-source dashboard
+  (servers with url-source dashboards): uploads a local folder or inline
+  files to a public storage (one per dashboard, created if missing) and
+  points a dashboard at the entry page with `?v=` against stale caches, or,
+  with `target`, writes the `dashboard` property of a device, product,
+  asset type, asset group or project.
+- The dashboard SDK reference, read from the server's
+  `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
+  and in `resource_describe` of the dashboard type.
 - `scripts/catalog-draft.js`: drafts catalog entries from an OpenAPI
   document.
 
