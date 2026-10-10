@@ -18,7 +18,7 @@ It holds everything that is not specific to a product:
   account path built in `paths`.
 - **Generic commands** (`cli`, `commands/*`) — login, logout, profile, device,
   product, bucket, mcp.
-- **MCP** (`mcp/*`) — the stdio server and 25 generic tools: seven
+- **MCP** (`mcp/*`) — the stdio server and 22 generic tools: eight
   `resource_*` tools over a catalog of the server's resource types, and the
   operations that are not CRUD (bucket data, device resources, storage
   files, dashboard publishing, the server's documentation…), plus that
@@ -77,9 +77,10 @@ afterDelete } }`), run after the core's: see `mcp/resource-hooks.js`.
 Tool names follow `<object>[_<subobject>]_<verb>`, with the verbs list, get,
 describe, create, update, delete, clone, call, read, write, send.
 
-The server's collections are reached through seven generic tools —
+The server's collections are reached through eight generic tools —
 `resource_describe`, `resource_list`, `resource_get`, `resource_create`,
-`resource_update`, `resource_delete`, `resource_clone` — that take a `type`
+`resource_update`, `resource_delete`, `resource_clone`, `resource_call`
+(actions that are not CRUD) — that take a `type`
 from the catalog (`lib/mcp/catalog.js`), a `parent` for child types and an
 `id`. The catalog is a reviewed table, never discovered at run time: each
 type has its path, API version, parent, id and the verbs it allows, with the

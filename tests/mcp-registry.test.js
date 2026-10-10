@@ -85,16 +85,16 @@ describe('mcp registry', () => {
 
     it('lets a CLI replace a generic tool when it says so', () => {
         const mine = {
-            name: 'device_stats',
+            name: 'device_overview',
             replaces: true,
-            description: 'Platform-specific device stats.',
+            description: 'Platform-specific device overview.',
             inputSchema: { type: 'object', properties: {} },
             handler: async () => ({ content: [] }),
         };
         const built = buildTools([mine]);
-        const info = built.filter((t) => t.name === 'acme_device_stats');
+        const info = built.filter((t) => t.name === 'acme_device_overview');
         assert.equal(info.length, 1);
-        assert.equal(info[0].description, 'Platform-specific device stats.');
+        assert.equal(info[0].description, 'Platform-specific device overview.');
         assert.ok(!('replaces' in info[0]));
         assert.throws(
             () => buildTools([{ ...mine, name: 'not_generic' }]),

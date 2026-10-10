@@ -3,8 +3,8 @@
 ## [0.2.0] - 2026-10-10
 
 Incompatible change of the MCP tools: from 48 tools, one per type and
-operation, to 25, less than half the size in `tools/list` (22,900
-characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
+operation, to 22, less than half the size in `tools/list` (about 22,000
+characters instead of 51,400, roughly 6,100 tokens instead of 14,300).
 
 ### Added
 
@@ -18,7 +18,9 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
   properties and their children (device properties, tokens, buckets, bucket
   tags, services and HTTP callback; product properties, profile entries,
   code and services; bucket tags and exports; asset type, asset group and
-  project properties; roles, project members and roles, syncs). Each tool
+  project properties; roles, project members and roles, syncs) and the
+  server's administration (users, hosts, domains, brands, OAuth clients,
+  identity providers, proxies, under /v1 rather than an account). Each tool
   offers only the types that support its verb; permissions are the
   server's to enforce.
 - `resource_describe` reads the request schemas and examples from the
@@ -31,10 +33,14 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
 - Resource hooks: generated device credentials, the identity's product
   template, token expiries as durations ("30d") and permission tree checks.
   CLIs add theirs with `runCli({ resourceHooks })`.
+- `resource_call`: actions of a type that are not CRUD, declared in the
+  catalog with their operationId (checked against the OpenAPI document):
+  verify a domain, restart a host or read/replace its settings, send a
+  brand's test email, call an endpoint, export a product, read a device's
+  usage, test an alarm rule (rule, source, notification).
 - Tools that are not CRUD: `bucket_data_read`, `bucket_data_write`,
   `device_resource_list`, `device_resource_call`, `device_data_send`,
-  `device_stats`, `device_overview`, `product_resource_call`,
-  `product_export`, `endpoint_call`, `alarm_rule_test`,
+  `device_overview`, `product_resource_call`,
   `storage_file_list` / `_read` / `_write` / `_delete`.
 - `dashboard_publish`: publishes HTML apps as url-source dashboards
   (servers with url-source dashboards). Uploads a local folder (a build

@@ -2,7 +2,15 @@
 import './setup.js';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CATALOG, VERBS, ancestry, requestFor, templateFor } from '../lib/mcp/catalog.js';
+import {
+    CATALOG,
+    VERBS,
+    actionRequest,
+    actionTemplate,
+    ancestry,
+    requestFor,
+    templateFor,
+} from '../lib/mcp/catalog.js';
 import { bundledSpec, findOperation, resolveRefs } from '../lib/openapi.js';
 import { buildTools } from '../lib/mcp/registry.js';
 import { mergeHooks } from '../lib/mcp/resource-hooks.js';
@@ -30,6 +38,45 @@ describe('resource catalog', () => {
             }
         }
         assert.deepEqual(wrong, []);
+    });
+
+    it('every action exists in the OpenAPI document, at its path and method', () => {
+        const wrong = [];
+        for (const [name, type] of Object.entries(CATALOG)) {
+            for (const [action, spec] of Object.entries(type.actions || {})) {
+                const { method, path } = actionTemplate(name, action);
+                const found = findOperation(doc, method, path);
+                if (found?.operation.operationId !== spec.op) {
+                    wrong.push(
+                        `${name}.${action}: ${method.toUpperCase()} ${path} is ${found?.operation.operationId ?? 'missing'}, expected ${spec.op}`,
+                    );
+                }
+            }
+        }
+        assert.deepEqual(wrong, []);
+    });
+
+    it('builds server-wide paths without an account, and per-action versions', () => {
+        assert.deepEqual(requestFor('domain', 'list', { user: ACCOUNT }), {
+            method: 'get',
+            url: '/v1/domains',
+        });
+        assert.deepEqual(actionRequest('domain', 'verify', { id: 'iot.acme.com' }), {
+            method: 'post',
+            url: '/v1/domains/iot.acme.com/verify',
+        });
+        assert.equal(
+            actionRequest('device', 'stats', { id: 'd1', user: ACCOUNT }).url,
+            '/v3/users/acme/devices/d1/stats',
+        );
+        assert.equal(
+            actionRequest('brand', 'test_email', { id: 'acme' }).url,
+            '/v1/brands/acme/email/test',
+        );
+        assert.throws(
+            () => actionRequest('domain', 'restart', { id: 'x' }),
+            /has no action "restart" \(it has: verify\)/,
+        );
     });
 
     it('only uses known verbs, and every parent is a type with an id', () => {
