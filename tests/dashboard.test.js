@@ -131,7 +131,8 @@ describe('dashboard publishing', () => {
 
 describe('dashboard MCP surface', () => {
     it('serves the SDK reference as a resource under the CLI prefix', () => {
-        const [sdk, types] = buildResources();
+        const [concepts, sdk, types] = buildResources();
+        assert.equal(concepts.uri, 'acme://concepts');
         assert.equal(sdk.uri, 'acme://dashboard-sdk');
         assert.equal(types.uri, 'acme://dashboard-sdk-types');
         assert.match(sdk.description, /acme_dashboard_publish/);

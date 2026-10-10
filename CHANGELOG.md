@@ -51,6 +51,9 @@ characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
   `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
   and in `resource_describe` of the dashboard type; its TypeScript
   declarations (`/sdk/thinger-dashboard.d.ts`) as `<prefix>://dashboard-sdk-types`.
+- The server's guide to platform concepts (`/sdk/thinger-concepts.md`) as the
+  MCP resource `<prefix>://concepts`, and appended to `resource_describe`
+  without a type (the overview call) on servers that publish it.
 - `scripts/catalog-draft.js`: drafts catalog entries from an OpenAPI
   document.
 
