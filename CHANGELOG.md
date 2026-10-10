@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1] - 2026-10-10
+
+### Fixed
+
+- `repository.url` in the canonical `git+https` form npm expects; first release
+  published from GitHub Actions through Trusted Publishing.
+
 ## [0.1.0] - 2026-10-10
 
 First version, extracted from the core of `thinr` 1.3.5 and made

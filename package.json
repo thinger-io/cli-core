@@ -1,6 +1,6 @@
 {
     "name": "@thinger-io/cli-core",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Shared core of the Thinger.io CLIs and their MCP servers: API client, auth, profiles, generic commands and MCP tools",
     "type": "module",
     "exports": {
@@ -14,7 +14,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/thinger-io/cli-core.git"
+        "url": "git+https://github.com/thinger-io/cli-core.git"
     },
     "bugs": "https://github.com/thinger-io/cli-core/issues",
     "homepage": "https://github.com/thinger-io/cli-core#readme",
