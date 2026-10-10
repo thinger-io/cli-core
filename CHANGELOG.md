@@ -24,7 +24,9 @@ characters instead of 51,400, roughly 5,400 tokens instead of 14,300).
   server's own OpenAPI document (`/v1/server/swagger.json`), cached per
   server and version in `~/.config/<cli>/cache`; servers that do not publish
   it fall back to the bundled copy (`openapi/swagger.json`, server
-  7.2.4-beta).
+  7.2.4-beta). It also lists, for each verb, the permission action a token
+  needs (`permissions`: `Device` / `ReadDeviceStatus`…), taken from the same
+  document.
 - Admin mode (`mcp --admin`, `<PREFIX>_MCP_ADMIN=1`): roles, syncs, project
   members and project roles.
 - Resource hooks: generated device credentials, the identity's product
@@ -40,6 +42,9 @@ characters instead of 51,400, roughly 5,400 tokens instead of 14,300).
 
 ### Changed
 
+- A 403 no longer says the token may have expired: it says the token or the
+  account is not allowed, with the server's reason. The error code is still
+  `unauthorized`.
 - `profiles` is now `profile_list`; `bucket_read` is `bucket_data_read`;
   `resource_list` / `resource_call` (device resources) are
   `device_resource_list` / `device_resource_call`.
