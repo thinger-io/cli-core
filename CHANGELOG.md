@@ -49,7 +49,8 @@ characters instead of 51,400, roughly 6,000 tokens instead of 14,300).
   styles without a content hash are reported.
 - The dashboard SDK reference, read from the server's
   `/sdk/thinger-dashboard.js`: as the MCP resource `<prefix>://dashboard-sdk`
-  and in `resource_describe` of the dashboard type.
+  and in `resource_describe` of the dashboard type; its TypeScript
+  declarations (`/sdk/thinger-dashboard.d.ts`) as `<prefix>://dashboard-sdk-types`.
 - `scripts/catalog-draft.js`: drafts catalog entries from an OpenAPI
   document.
 
