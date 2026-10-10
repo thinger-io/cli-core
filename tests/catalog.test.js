@@ -13,6 +13,7 @@ import {
 } from '../lib/mcp/catalog.js';
 import { bundledSpec, findOperation, resolveRefs } from '../lib/openapi.js';
 import { buildTools } from '../lib/mcp/registry.js';
+import { pick } from '../lib/mcp/tools-resource.js';
 import { mergeHooks } from '../lib/mcp/resource-hooks.js';
 
 const doc = bundledSpec();
@@ -64,6 +65,12 @@ describe('resource catalog', () => {
         assert.deepEqual(actionRequest('domain', 'verify', { id: 'iot.acme.com' }), {
             method: 'post',
             url: '/v1/domains/iot.acme.com/verify',
+            query: undefined,
+        });
+        assert.deepEqual(actionRequest('plugin', 'install', { id: 'node-red', user: ACCOUNT }), {
+            method: 'post',
+            url: '/v1/users/acme/plugins/node-red',
+            query: { action: 'create' },
         });
         assert.equal(
             actionRequest('device', 'stats', { id: 'd1', user: ACCOUNT }).url,
@@ -172,12 +179,27 @@ describe('resource tools', () => {
     });
 
     it('stay a short list', () => {
-        assert.ok(tools.length <= 25, `${tools.length} tools`);
+        assert.ok(tools.length <= 23, `${tools.length} tools`);
     });
 
     it('describe types without a server, from the catalog', async () => {
         const result = await byName.acme_resource_describe.handler({});
         assert.match(result.content[0].text, /device_property \(parent <device>\)/);
+    });
+});
+
+describe('list projection', () => {
+    it('keeps only the listed dot paths', () => {
+        const record = {
+            name: 'a',
+            version: '1',
+            metadata: { name: 'A', image: 'x' },
+            resources: [1],
+        };
+        assert.deepEqual(pick(record, ['name', 'metadata.name', 'missing']), {
+            name: 'a',
+            metadata: { name: 'A' },
+        });
     });
 });
 

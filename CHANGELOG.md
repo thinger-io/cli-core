@@ -3,8 +3,8 @@
 ## [0.2.0] - 2026-10-10
 
 Incompatible change of the MCP tools: from 48 tools, one per type and
-operation, to 22, less than half the size in `tools/list` (about 22,000
-characters instead of 51,400, roughly 6,100 tokens instead of 14,300).
+operation, to 23, less than half the size in `tools/list` (about 23,200
+characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
 
 ### Added
 
@@ -33,6 +33,11 @@ characters instead of 51,400, roughly 6,100 tokens instead of 14,300).
 - Resource hooks: generated device credentials, the identity's product
   template, token expiries as durations ("30d") and permission tree checks.
   CLIs add theirs with `runCli({ resourceHooks })`.
+- Plugins: type `plugin` (installed by default; the installable catalog
+  with filter `available`, summarised) with actions install, upgrade,
+  remove, start, stop, restart, pause, unpause, kill, public, private;
+  `plugin_property`; and `plugin_call` for the API each plugin serves.
+  Lists that ignore count/index are paged client-side.
 - `resource_call`: actions of a type that are not CRUD, declared in the
   catalog with their operationId (checked against the OpenAPI document):
   verify a domain, restart a host or read/replace its settings, send a
