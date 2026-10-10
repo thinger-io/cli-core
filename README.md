@@ -72,9 +72,6 @@ servers.
 afterDelete } }`), run after the core's: see `mcp/resource-hooks.js`.
 - `mcpInstructions` — server-level guidance sent to MCP clients.
 
-`<cli> mcp --admin` (or `<PREFIX>_MCP_ADMIN=1`) also serves the
-administration types: roles, syncs, project members and project roles.
-
 ## MCP tools
 
 Tool names follow `<object>[_<subobject>]_<verb>`, with the verbs list, get,

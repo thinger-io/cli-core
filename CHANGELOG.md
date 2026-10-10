@@ -18,8 +18,9 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
   properties and their children (device properties, tokens, buckets, bucket
   tags, services and HTTP callback; product properties, profile entries,
   code and services; bucket tags and exports; asset type, asset group and
-  project properties). Each tool offers only the types that support its
-  verb.
+  project properties; roles, project members and roles, syncs). Each tool
+  offers only the types that support its verb; permissions are the
+  server's to enforce.
 - `resource_describe` reads the request schemas and examples from the
   server's own OpenAPI document (`/v1/server/swagger.json`), cached per
   server and version in `~/.config/<cli>/cache`; servers that do not publish
@@ -27,8 +28,6 @@ characters instead of 51,400, roughly 6,400 tokens instead of 14,300).
   7.2.4-beta). It also lists, for each verb, the permission action a token
   needs (`permissions`: `Device` / `ReadDeviceStatus`…), taken from the same
   document.
-- Admin mode (`mcp --admin`, `<PREFIX>_MCP_ADMIN=1`): roles, syncs, project
-  members and project roles.
 - Resource hooks: generated device credentials, the identity's product
   template, token expiries as durations ("30d") and permission tree checks.
   CLIs add theirs with `runCli({ resourceHooks })`.

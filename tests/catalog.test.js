@@ -2,14 +2,7 @@
 import './setup.js';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    CATALOG,
-    VERBS,
-    ancestry,
-    requestFor,
-    templateFor,
-    typeNames,
-} from '../lib/mcp/catalog.js';
+import { CATALOG, VERBS, ancestry, requestFor, templateFor } from '../lib/mcp/catalog.js';
 import { bundledSpec, findOperation, resolveRefs } from '../lib/openapi.js';
 import { buildTools } from '../lib/mcp/registry.js';
 import { mergeHooks } from '../lib/mcp/resource-hooks.js';
@@ -48,13 +41,6 @@ describe('resource catalog', () => {
             }
             assert.ok(type.description.length < 140, `${name}: description too long`);
         }
-    });
-
-    it('keeps administration types out unless asked for', () => {
-        const admin = Object.keys(CATALOG).filter((n) => CATALOG[n].admin);
-        assert.deepEqual(admin.sort(), ['project_member', 'project_role', 'role', 'sync']);
-        for (const n of admin) assert.ok(!typeNames().includes(n));
-        for (const n of admin) assert.ok(typeNames({ admin: true }).includes(n));
     });
 
     it('builds account paths through lib/paths.js, with the parent chain', () => {
@@ -130,21 +116,12 @@ describe('resource tools', () => {
     it('offer, per verb, exactly the types that support it', () => {
         for (const verb of ['list', 'get', 'create', 'delete', 'clone']) {
             const tool = byName[`acme_resource_${verb}`];
-            const expected = Object.keys(CATALOG).filter(
-                (n) => !CATALOG[n].admin && verb in CATALOG[n].ops,
-            );
+            const expected = Object.keys(CATALOG).filter((n) => verb in CATALOG[n].ops);
             assert.deepEqual(tool.inputSchema.properties.type.enum, expected, verb);
         }
         assert.ok(
             !byName.acme_resource_delete.inputSchema.properties.type.enum.includes('device_bucket'),
         );
-    });
-
-    it('serve administration types in admin mode only', () => {
-        const admin = buildTools([], { admin: true });
-        const list = admin.find((t) => t.name === 'acme_resource_list');
-        assert.ok(list.inputSchema.properties.type.enum.includes('role'));
-        assert.ok(!byName.acme_resource_list.inputSchema.properties.type.enum.includes('role'));
     });
 
     it('stay a short list', () => {
