@@ -69,6 +69,10 @@ describe('dashboard publishing', () => {
     // Validation happens before any request, so these need no server.
     it('needs something to do', async () => {
         await assert.rejects(publishApp({}), /nothing to do/);
+        await assert.rejects(
+            publishApp({ storage: 'app', preview: 0.0 + 1000 }),
+            /preview is true or a number of hours/,
+        );
         await assert.rejects(publishApp({ files: {} }), /no files/);
         await assert.rejects(
             publishApp({ to: [{ dashboard: 'd' }], prune: true }),
