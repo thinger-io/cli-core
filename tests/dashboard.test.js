@@ -9,6 +9,7 @@ import {
     collectFiles,
     defaultStorage,
     entryUrl,
+    layoutUrl,
     previewTokenId,
     previewUrl,
     publishApp,
@@ -215,6 +216,13 @@ describe('dashboard preview', () => {
         assert.equal(
             previewUrl('https://s/x/files/', 't', { group: 'north', device: undefined }),
             'https://s/x/files/#/&thinger_token=t&thinger_group=north',
+        );
+    });
+
+    it('wraps a preview link in the layout harness', () => {
+        assert.equal(
+            layoutUrl('https://s', 'https://s/x/files/#/&thinger_token=t'),
+            'https://s/sdk/preview.html#src=https%3A%2F%2Fs%2Fx%2Ffiles%2F%23%2F%26thinger_token%3Dt&sizes=1150x758,950x678,380x598',
         );
     });
 
