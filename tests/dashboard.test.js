@@ -12,7 +12,6 @@ import {
     previewTokenId,
     previewUrl,
     publishApp,
-    unhashedAssets,
 } from '../lib/dashboard.js';
 import { CATALOG } from '../lib/mcp/catalog.js';
 import { buildTools, listResources, readResource } from '../lib/mcp/registry.js';
@@ -108,43 +107,31 @@ describe('dashboard publishing', () => {
         );
     });
 
-    it('builds versioned entry urls with an optional hash route', () => {
+    it('points at the storage folder for its index, at other pages by name', () => {
         assert.equal(
-            entryUrl('acme', 'app_plant', { entry: 'pages/device view.html' }, 42),
-            '/v1/users/acme/storages/app_plant/files/pages/device%20view.html?v=42',
+            entryUrl('acme', 'app_plant', { route: '/devices/gw1' }, { index: 'index.html' }),
+            '/v1/users/acme/storages/app_plant/files/#/devices/gw1',
         );
         assert.equal(
-            entryUrl('acme', 'app_plant', { route: '/devices/gw1' }, 42),
-            '/v1/users/acme/storages/app_plant/files/index.html?v=42#/devices/gw1',
+            entryUrl(
+                'acme',
+                'app_plant',
+                { entry: 'pages/device view.html' },
+                { index: 'index.html' },
+            ),
+            '/v1/users/acme/storages/app_plant/files/pages/device%20view.html',
         );
         assert.equal(
-            entryUrl('acme', 'app_plant', { route: '#/x' }, 1),
-            '/v1/users/acme/storages/app_plant/files/index.html?v=1#/x',
+            entryUrl('acme', 'app_plant', { route: '#/x' }),
+            '/v1/users/acme/storages/app_plant/files/index.html#/x',
         );
     });
 
-    it('flags scripts and styles without a content hash', () => {
-        assert.deepEqual(
-            unhashedAssets([
-                'index.html',
-                'main-4QXZ7J2K.js',
-                'chunk-AB12CD34.js',
-                'styles.9f8e7d6c.css',
-                'app.js',
-                'css/style.css',
-                'assets/logo.png',
-            ]),
-            ['app.js', 'css/style.css'],
+    it('adds ?v= only when asked to bump', () => {
+        assert.equal(
+            entryUrl('acme', 'app_plant', { route: '/x' }, { index: 'index.html', version: 42 }),
+            '/v1/users/acme/storages/app_plant/files/?v=42#/x',
         );
-    });
-
-    it('does not flag assets the pages load with a version query', () => {
-        const files = {
-            'index.html': '<script src="app.js?v=3"></script><link href="css/style.css">',
-        };
-        assert.deepEqual(unhashedAssets(['index.html', 'app.js', 'css/style.css'], files), [
-            'css/style.css',
-        ]);
     });
 });
 
@@ -216,14 +203,14 @@ describe('dashboard MCP surface', () => {
 describe('dashboard preview', () => {
     it('puts the session after the route, defaulting to #/', () => {
         assert.equal(
-            previewUrl('https://s/v1/users/u/storages/app/files/index.html?v=1#/devices', 'a.b.c', {
+            previewUrl('https://s/v1/users/u/storages/app/files/#/devices', 'a.b.c', {
                 project: 'plant',
             }),
-            'https://s/v1/users/u/storages/app/files/index.html?v=1#/devices&thinger_token=a.b.c&thinger_project=plant',
+            'https://s/v1/users/u/storages/app/files/#/devices&thinger_token=a.b.c&thinger_project=plant',
         );
         assert.equal(
-            previewUrl('https://s/x/index.html?v=1', 't', { group: 'north', device: undefined }),
-            'https://s/x/index.html?v=1#/&thinger_token=t&thinger_group=north',
+            previewUrl('https://s/x/files/', 't', { group: 'north', device: undefined }),
+            'https://s/x/files/#/&thinger_token=t&thinger_group=north',
         );
     });
 
