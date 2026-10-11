@@ -135,6 +135,15 @@ describe('dashboard publishing', () => {
             ['app.js', 'css/style.css'],
         );
     });
+
+    it('does not flag assets the pages load with a version query', () => {
+        const files = {
+            'index.html': '<script src="app.js?v=3"></script><link href="css/style.css">',
+        };
+        assert.deepEqual(unhashedAssets(['index.html', 'app.js', 'css/style.css'], files), [
+            'css/style.css',
+        ]);
+    });
 });
 
 describe('dashboard MCP surface', () => {
