@@ -9,6 +9,8 @@ import {
     collectFiles,
     defaultStorage,
     entryUrl,
+    previewTokenId,
+    previewUrl,
     publishApp,
     unhashedAssets,
 } from '../lib/dashboard.js';
@@ -208,5 +210,29 @@ describe('dashboard MCP surface', () => {
                 }
             }
         }
+    });
+});
+
+describe('dashboard preview', () => {
+    it('puts the session after the route, defaulting to #/', () => {
+        assert.equal(
+            previewUrl('https://s/v1/users/u/storages/app/files/index.html?v=1#/devices', 'a.b.c', {
+                project: 'plant',
+            }),
+            'https://s/v1/users/u/storages/app/files/index.html?v=1#/devices&thinger_token=a.b.c&thinger_project=plant',
+        );
+        assert.equal(
+            previewUrl('https://s/x/index.html?v=1', 't', { group: 'north', device: undefined }),
+            'https://s/x/index.html?v=1#/&thinger_token=t&thinger_group=north',
+        );
+    });
+
+    it('names one token per app and project, within 32 characters', () => {
+        assert.equal(previewTokenId('app_plant'), 'preview_app_plant');
+        assert.equal(previewTokenId('app', 'plant'), 'preview_app_plant');
+        const long = previewTokenId('dashboard_device_gateway_01', 'north_plant');
+        assert.ok(long.length <= 32);
+        assert.equal(long, previewTokenId('dashboard_device_gateway_01', 'north_plant'));
+        assert.notEqual(long, previewTokenId('dashboard_device_gateway_01', 'south_plant'));
     });
 });
