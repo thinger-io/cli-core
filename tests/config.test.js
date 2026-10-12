@@ -7,6 +7,7 @@ import path from 'node:path';
 import {
     deleteConfig,
     getActiveProfile,
+    getProfile,
     profileNameFor,
     readConfig,
     serverURL,
@@ -16,6 +17,7 @@ import {
     writeConfig,
 } from '../lib/config.js';
 import api from '../lib/api.js';
+import { authenticate } from '../lib/auth.js';
 
 const CONFIG = () => path.join(os.homedir(), '.config', 'acme-cli', 'config.json');
 
@@ -39,6 +41,17 @@ describe('profiles', () => {
         assert.ok(fs.existsSync(CONFIG()));
         assert.equal(fs.statSync(CONFIG()).mode & 0o777, 0o600);
         assert.deepEqual(fs.readdirSync(path.join(os.homedir(), '.config')), ['acme-cli']);
+    });
+
+    it('take group and other permissions away from a file made by an older version', () => {
+        const dir = path.dirname(CONFIG());
+        fs.chmodSync(CONFIG(), 0o644);
+        fs.chmodSync(dir, 0o755);
+        setActiveProfile('lab');
+        writeConfig({ server: 'http://localhost:8080', username: 'bob', token: 'T-lab2' });
+        assert.equal(fs.statSync(CONFIG()).mode & 0o777, 0o600);
+        assert.equal(fs.statSync(dir).mode & 0o777, 0o700);
+        assert.deepEqual(fs.readdirSync(dir), ['config.json']);
     });
 
     it('default to the first one written', () => {
@@ -118,5 +131,72 @@ describe('api requests', () => {
     it('keep an Authorization header the caller set (token probes at login)', async () => {
         const req = await intercept({ url: '/x', headers: { Authorization: 'Bearer probe' } });
         assert.equal(req.headers.Authorization, 'Bearer probe');
+    });
+});
+
+describe('login', () => {
+    beforeEach(() => {
+        deleteConfig();
+        setActiveProfile(null);
+        seed();
+    });
+
+    /** Answer every request with `status`. */
+    async function withServer(status, fn) {
+        const saved = api.defaults.adapter;
+        api.defaults.adapter = async (config) => {
+            const response = { data: {}, status, statusText: '', headers: {}, config };
+            if (status < 300) return response;
+            throw Object.assign(new Error(`status ${status}`), { response, config });
+        };
+        try {
+            return await fn();
+        } finally {
+            api.defaults.adapter = saved;
+        }
+    }
+
+    it('keeps the current profile when the new credentials are refused', async () => {
+        setActiveProfile('prod');
+        const login = () =>
+            authenticate({
+                method: 'token',
+                server: 'prod.example.com',
+                username: 'alice',
+                token: 'wrong',
+            });
+        await withServer(401, () => assert.rejects(login, /Invalid token/));
+        setActiveProfile(null);
+        const prod = await withActiveProfile('prod', () => readConfig());
+        assert.deepEqual(prod, { server: 'prod.example.com', username: 'alice', token: 'T-prod' });
+    });
+
+    it('leaves no half-made profile behind for a new server', async () => {
+        setActiveProfile(null);
+        const login = () =>
+            authenticate({
+                method: 'token',
+                server: 'new.example.com',
+                username: 'carol',
+                token: 'wrong',
+            });
+        await withServer(401, () => assert.rejects(login));
+        setActiveProfile(null);
+        assert.equal(getProfile('new.example.com'), undefined);
+        assert.equal(getActiveProfile(), 'prod');
+    });
+
+    it('saves the profile when the token is accepted', async () => {
+        setActiveProfile('prod');
+        await withServer(200, () =>
+            authenticate({
+                method: 'token',
+                server: 'prod.example.com',
+                username: 'alice',
+                token: 'T-new',
+            }),
+        );
+        setActiveProfile(null);
+        assert.equal(getProfile('prod').token, 'T-new');
     });
 });
