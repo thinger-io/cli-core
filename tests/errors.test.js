@@ -68,6 +68,39 @@ describe('apiError with a server message', () => {
     });
 });
 
+describe('apiError with a device resource error', () => {
+    it('keeps the error a device resource answered', () => {
+        const err = apiError({
+            response: {
+                status: 502,
+                statusText: 'Bad Gateway',
+                data: {
+                    error: 'cannot open /dev/ttyTHS1: Permission denied',
+                    serial: '/dev/ttyTHS1',
+                },
+            },
+        });
+        assert.equal(err.code, 'server_error');
+        assert.equal(
+            err.message,
+            'Server error: 502 Bad Gateway — cannot open /dev/ttyTHS1: Permission denied',
+        );
+    });
+});
+
+describe('apiError on a client timeout', () => {
+    it('says the server may still be working, so callers check before retrying', () => {
+        const err = apiError({
+            code: 'ECONNABORTED',
+            message: 'timeout of 600000ms exceeded',
+            config: { timeout: 600000 },
+            request: {},
+        });
+        assert.equal(err.code, 'timeout');
+        assert.match(err.message, /within 600 s\. It may still be working/);
+    });
+});
+
 describe('apiError with a plain-text server message', () => {
     it('keeps a short text body, but not an HTML page', () => {
         const text = apiError({ response: { status: 400, data: '"cannot create more products"' } });
