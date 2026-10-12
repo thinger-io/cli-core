@@ -1,7 +1,7 @@
 # @thinger-io/cli-core
 
 The shared core of the CLIs built on Thinger.io servers — `thinger`
-([@thinger-io/thinger-cli](https://github.com/thinger-io/thinger-cli)) and
+([@thinger-io/cli](https://github.com/thinger-io/thinger-cli)) and
 ThinRemote's `thinr` — and of the MCP servers they expose.
 
 It holds everything that is not specific to a product:
@@ -18,7 +18,7 @@ It holds everything that is not specific to a product:
   account path built in `paths`.
 - **Generic commands** (`cli`, `commands/*`) — login, logout, profile, device,
   product, bucket, mcp.
-- **MCP** (`mcp/*`) — the stdio server and 22 generic tools: eight
+- **MCP** (`mcp/*`) — the stdio server and 23 generic tools: eight
   `resource_*` tools over a catalog of the server's resource types, and the
   operations that are not CRUD (bucket data, device resources, storage
   files, dashboard publishing, the server's documentation…), plus that

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2026-10-12
+
+### Changed
+
+- Repository renamed to `thinger-io/thinger-cli-core` (the package keeps its
+  name). README: 23 MCP tools.
+
 ## [0.2.0] - 2026-10-10
 
 Incompatible change of the MCP tools: from 48 tools, one per type and
