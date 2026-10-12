@@ -54,6 +54,12 @@ describe('profiles', () => {
         assert.deepEqual(fs.readdirSync(dir), ['config.json']);
     });
 
+    it('fix those permissions on a plain read too', () => {
+        fs.chmodSync(CONFIG(), 0o644);
+        readConfig();
+        assert.equal(fs.statSync(CONFIG()).mode & 0o777, 0o600);
+    });
+
     it('default to the first one written', () => {
         assert.equal(getActiveProfile(), 'prod');
         assert.equal(readConfig().username, 'alice');
