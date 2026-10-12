@@ -14,6 +14,7 @@ import {
 import { bundledSpec, findOperation, resolveRefs } from '../lib/openapi.js';
 import { buildTools } from '../lib/mcp/registry.js';
 import { pick } from '../lib/mcp/tools-resource.js';
+import api from '../lib/api.js';
 import { mergeHooks } from '../lib/mcp/resource-hooks.js';
 
 const doc = bundledSpec();
@@ -222,6 +223,92 @@ describe('openapi helpers', () => {
     it('prefer literal path segments over parameters', () => {
         const found = findOperation(doc, 'get', '/v1/users/{}/products/{}/profile/code');
         assert.equal(found.operation.operationId, 'Product_ReadProfileCode');
+    });
+});
+
+describe('plugin catalog', () => {
+    const byName = Object.fromEntries(tools.map((t) => [t.name, t]));
+    const catalog = [
+        {
+            name: 'ws101',
+            version: '1.0.0',
+            metadata: { name: 'WS101', description: 'LoRaWAN button', vendor: 'milesight-iot' },
+            repository: { type: 'git' },
+        },
+        { name: 'other', version: '1.0.0', metadata: { description: 'Modbus gateway' } },
+    ];
+
+    /** Answer every request with `data`, counting them. */
+    function stub(data) {
+        const calls = [];
+        const saved = { adapter: api.defaults.adapter, baseURL: api.defaults.baseURL };
+        api.defaults.baseURL = 'http://stub';
+        api.defaults.adapter = async (config) => {
+            calls.push(config);
+            return { data, status: 200, statusText: 'OK', headers: {}, config };
+        };
+        return { calls, restore: () => Object.assign(api.defaults, saved) };
+    }
+
+    it('lists metadata, searches it and keeps the catalog for a while', async () => {
+        const s = stub(catalog);
+        try {
+            const list = (search) =>
+                byName.acme_resource_list.handler({
+                    type: 'plugin',
+                    user: 'acme',
+                    filter: { filter: 'available' },
+                    search,
+                });
+            const text = (await list('lorawan milesight')).content[0].text;
+            assert.match(text, /^1 plugin:/);
+            assert.match(text, /"vendor":"milesight-iot"/);
+            assert.doesNotMatch(text, /repository/);
+            assert.match((await list('modbus')).content[0].text, /"name":"other"/);
+            assert.equal(s.calls.length, 1);
+        } finally {
+            s.restore();
+        }
+    });
+
+    it('leaves the code and dashboard out of catalog manifests unless asked', async () => {
+        const manifest = {
+            name: 'lht65n',
+            resources: {
+                products: [
+                    {
+                        product: 'lht65n',
+                        _resources: { properties: [{ dashboard: 1 }] },
+                        profile: {
+                            buckets: { b: {} },
+                            code: { code: 'x'.repeat(100), version: '1.0' },
+                        },
+                    },
+                ],
+            },
+        };
+        const s = stub(manifest);
+        try {
+            const get = async (full) =>
+                JSON.parse(
+                    (
+                        await byName.acme_resource_get.handler({
+                            type: 'plugin',
+                            id: 'lht65n',
+                            user: 'acme',
+                            full,
+                        })
+                    ).content[0].text,
+                );
+            const short = await get(undefined);
+            const product = short.resources.products[0];
+            assert.equal(product._resources, undefined);
+            assert.deepEqual(product.profile, { buckets: { b: {} }, code: { version: '1.0' } });
+            assert.match(short.omitted, /full: true/);
+            assert.deepEqual(await get(true), manifest);
+        } finally {
+            s.restore();
+        }
     });
 });
 
