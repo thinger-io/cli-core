@@ -19,6 +19,7 @@ function notesType() {
             parent: 'device',
             id: 'name',
             schema: { type: 'object', properties: { name: {}, text: {} } },
+            describe: async () => ({ reference: { kinds: ['memo', 'todo'] } }),
             notes: 'Use {tool:resource_call} action "archive" to archive one.',
             list: (ctx) => {
                 calls.push(['list', ctx.parent, ctx.filter]);
@@ -45,6 +46,11 @@ function notesType() {
                 archive: {
                     description: 'Archive a note.',
                     run: (_body, ctx) => ({ archived: ctx.id }),
+                },
+                fail: {
+                    description: 'Always fails.',
+                    on: 'either',
+                    run: () => ({ content: [{ type: 'text', text: 'it failed' }], isError: true }),
                 },
                 count: {
                     description: 'How many notes the device has.',
@@ -156,8 +162,11 @@ describe('resource types a CLI adds', () => {
         );
         await assert.rejects(
             call('resource_call', { ...where, action: 'nope' }),
-            /has no action "nope" \(it has: archive, count\)/,
+            /has no action "nope" \(it has: archive, fail, count\)/,
         );
+        const failed = await call('resource_call', { ...where, action: 'fail' });
+        assert.equal(failed.isError, true);
+        assert.equal(textOf(failed), 'it failed');
     });
 
     it('adds actions to the server types', async () => {
@@ -212,10 +221,11 @@ describe('resource types a CLI adds', () => {
         );
         assert.match(described, /Use acme_resource_call action "archive"/);
         assert.match(described, /^fields: /m);
+        assert.match(described, /^reference: \{"kinds":\["memo","todo"\]\}$/m);
         const summary = textOf(await call('resource_describe', {}));
         assert.match(
             summary,
-            /^device_note \(parent <device>\): Notes kept on a device\. \[list get create update delete \| archive count\]$/m,
+            /^device_note \(parent <device>\): Notes kept on a device\. \[list get create update delete \| archive fail count\]$/m,
         );
         assert.match(summary, /^device: .*\| .*reboot\]$/m);
         for (const tool of [
