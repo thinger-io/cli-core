@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0] - Unreleased
+
+### Added
+
+- `runCli({ resourceTypes, resourceActions })`: a CLI adds its platform's
+  own resource types (functions instead of a REST path) and actions on the
+  server's types, served by the same `resource_*` tools: listed in
+  `resource_describe`, searched and paged by `resource_list`, their parent
+  and id checked like the server's. Clashes with the catalog fail at
+  startup. ThinRemote serves its files, scripts, metrics, log sources and
+  playbooks this way.
+- `alarm_instance` action `stats`: how many instances there are in each
+  state.
+
+### Fixed
+
+- `resource_list` pages lists answered whole from any `index`, not only
+  when they are longer than a page.
+- `resource_describe` says which server actions take no id.
+
 ## [0.2.1] - 2026-10-12
 
 ### Changed

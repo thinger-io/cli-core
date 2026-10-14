@@ -288,3 +288,272 @@ describe('resource types a CLI adds', () => {
         );
     });
 });
+
+describe('resource types a CLI adds: what the review asked for', () => {
+    const run = (_b, ctx) => `ran on ${ctx.parent ?? '-'} ${ctx.id ?? '-'}`;
+
+    it('locates actions added to server types like the server ones', async () => {
+        const { call } = build({
+            actions: {
+                device: { reboot: { description: 'Reboot.', run } },
+                device_property: { touch: { description: 'Touch.', run } },
+                device_bucket: { flush: { description: 'Flush.', on: 'collection', run } },
+            },
+        });
+        await assert.rejects(
+            call('resource_call', { type: 'device', action: 'reboot' }),
+            /id \(<device>\) is required/,
+        );
+        await assert.rejects(
+            call('resource_call', { type: 'device_property', action: 'touch', id: 'p' }),
+            /parent \(<device>\) is required/,
+        );
+        assert.equal(
+            textOf(
+                await call('resource_call', {
+                    type: 'device_property',
+                    action: 'touch',
+                    parent: 'pump_1',
+                    id: 'p',
+                }),
+            ),
+            'ran on pump_1 p',
+        );
+        // Parent and id segments: as many as the location has, none `..`.
+        for (const parent of ['pump_1/x', '..', '']) {
+            await assert.rejects(
+                call('resource_call', {
+                    type: 'device_property',
+                    action: 'touch',
+                    parent,
+                    id: 'p',
+                }),
+                /parent \(<device>\) is required/,
+                parent,
+            );
+        }
+        assert.equal(
+            textOf(
+                await call('resource_call', {
+                    type: 'device_bucket',
+                    action: 'flush',
+                    parent: 'pump_1',
+                }),
+            ),
+            'ran on pump_1 -',
+        );
+    });
+
+    it('checks the parent of CLI types, nested ones included, and keeps paths as ids', async () => {
+        const seen = [];
+        const { call } = build({
+            types: {
+                box: {
+                    description: 'Boxes of a device.',
+                    parent: 'device',
+                    id: 'box',
+                    get: (ctx) => ({ box: ctx.id }),
+                },
+                box_item: {
+                    description: 'Items of a box.',
+                    parent: 'box',
+                    id: 'item',
+                    get: (ctx) => (seen.push([ctx.parent, ctx.id]), { item: ctx.id }),
+                },
+            },
+        });
+        const summary = textOf(await call('resource_describe', {}));
+        assert.match(summary, /^box_item \(parent <device>\/<box>\): /m);
+        await call('resource_get', { type: 'box_item', parent: 'pump_1/b1', id: '/a/b.txt' });
+        assert.deepEqual(seen, [['pump_1/b1', '/a/b.txt']]);
+        await assert.rejects(
+            call('resource_get', { type: 'box_item', parent: 'pump_1', id: 'x' }),
+            /parent \(<device>\/<box>\) is required/,
+        );
+        await assert.rejects(
+            call('resource_get', { type: 'box_item', parent: 'pump_1/../x', id: 'x' }),
+            /parent/,
+        );
+        await assert.rejects(
+            call('resource_get', { type: 'box_item', parent: 'pump_1/b1', id: 'a\nb' }),
+            /id \(<item>\) is required/,
+        );
+    });
+
+    it('runs hooks on CLI types after locating them, with the id from the body and one state', async () => {
+        const order = [];
+        const notes = notesType();
+        notes.type.get = (ctx) => {
+            ctx.state.read = true;
+            return { name: ctx.id };
+        };
+        const tools = buildTools([], {
+            types: { device_note: notes.type },
+            hooks: {
+                device_note: {
+                    beforeCreate: (body) => (
+                        order.push('beforeCreate'),
+                        { ...body, name: 'from_hook' }
+                    ),
+                    afterCreate: (_r, ctx) => `created ${ctx.id}`,
+                    afterGet: (record, ctx) => ({ ...record, shared: ctx.state.read === true }),
+                },
+            },
+        });
+        const call = (tool, args) => tools.find((t) => t.name === `acme_${tool}`).handler(args);
+        // Not located: the hook does not run.
+        await assert.rejects(call('resource_create', { type: 'device_note', body: {} }), /parent/);
+        assert.deepEqual(order, []);
+        const created = textOf(
+            await call('resource_create', {
+                type: 'device_note',
+                parent: 'pump_1',
+                body: { text: 'x' },
+            }),
+        );
+        assert.match(created, /Created device_note pump_1\/from_hook\./);
+        assert.match(created, /created from_hook/);
+        const got = JSON.parse(
+            textOf(
+                await call('resource_get', {
+                    type: 'device_note',
+                    parent: 'pump_1',
+                    id: 'from_hook',
+                }),
+            ),
+        );
+        assert.equal(got.shared, true);
+    });
+
+    it('refuses what CLI types cannot take and survives empty answers', async () => {
+        const { call, notes } = build();
+        const where = { type: 'device_note', parent: 'pump_1' };
+        await assert.rejects(
+            call('resource_update', { ...where, id: 'a', body: { text: 'x' }, merge: true }),
+            /takes no merge/,
+        );
+        await assert.rejects(
+            call('resource_update', { ...where, id: 'a', body: ['x'] }),
+            /JSON object/,
+        );
+        notes.type.get = () => undefined;
+        assert.equal(
+            textOf(await call('resource_get', { ...where, id: 'a' })),
+            'No device_note pump_1/a.',
+        );
+        await assert.rejects(
+            call('resource_call', { type: 'device', action: 'constructor', id: 'x' }),
+            /has no action "constructor"/,
+        );
+        await assert.rejects(
+            call('resource_call', { type: 'device', action: 'nope', id: 'x' }),
+            /has no action "nope"/,
+        );
+    });
+
+    it('pages lists answered whole from any index', async () => {
+        const { call, notes } = build();
+        notes.store.set('pump_1', new Map(['a', 'b', 'c'].map((n) => [n, { name: n }])));
+        const page = textOf(
+            await call('resource_list', { type: 'device_note', parent: 'pump_1', index: 1 }),
+        );
+        assert.match(page, /^2 device_note:/);
+        assert.match(page, /3 in total, showing 1–2/);
+    });
+
+    it('answers only well-formed tool results as they are, cut', async () => {
+        const { call } = build({
+            actions: {
+                device: {
+                    record: {
+                        description: 'A record with content.',
+                        run: () => ({ content: ['a'] }),
+                    },
+                    big: {
+                        description: 'Big.',
+                        run: () => ({
+                            content: [{ type: 'text', text: 'x'.repeat(MAX_TEXT + 5) }],
+                        }),
+                    },
+                },
+            },
+        });
+        const record = await call('resource_call', { type: 'device', action: 'record', id: 'd' });
+        assert.deepEqual(JSON.parse(textOf(record)), { content: ['a'] });
+        const big = await call('resource_call', { type: 'device', action: 'big', id: 'd' });
+        assert.match(textOf(big), /cut: \d+ characters/);
+    });
+
+    it('keeps describe working when a type reference fails', async () => {
+        const { call } = build({
+            types: {
+                flaky: {
+                    description: 'Flaky.',
+                    list: () => [],
+                    describe: () => {
+                        throw new Error('no reference today');
+                    },
+                },
+            },
+        });
+        assert.match(
+            textOf(await call('resource_describe', { type: 'flaky' })),
+            /^reference: unavailable: no reference today$/m,
+        );
+    });
+
+    it('rejects bad definitions at start', () => {
+        const run = () => {};
+        assert.throws(
+            () =>
+                buildTools([], {
+                    actions: { device: { x: { description: 'x', on: 'colection', run } } },
+                }),
+            /on must be item, collection or either/,
+        );
+        assert.throws(
+            () =>
+                buildTools([], {
+                    types: {
+                        a: { description: 'a', parent: 'b', id: 'a', list: () => [] },
+                        b: { description: 'b', parent: 'a', id: 'b', list: () => [] },
+                    },
+                }),
+            /loop/,
+        );
+        assert.throws(
+            () =>
+                buildTools([], {
+                    types: {
+                        single: { description: 's', parent: 'device', list: () => [] },
+                        child: { description: 'c', parent: 'single', id: 'c', list: () => [] },
+                    },
+                }),
+            /parent "single" has no id/,
+        );
+    });
+});
+
+describe('server types are not cut', () => {
+    it('answers a big server record whole', async () => {
+        const api = (await import('../lib/api.js')).default;
+        const saved = { adapter: api.defaults.adapter, baseURL: api.defaults.baseURL };
+        api.defaults.baseURL = 'http://stub';
+        api.defaults.adapter = async (config) => ({
+            data: { brand: 'b', logo: 'x'.repeat(MAX_TEXT + 10) },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config,
+        });
+        try {
+            const { call } = build();
+            const read = textOf(
+                await call('resource_get', { type: 'device', id: 'big', user: 'acme' }),
+            );
+            assert.equal(JSON.parse(read).logo.length, MAX_TEXT + 10);
+        } finally {
+            Object.assign(api.defaults, saved);
+        }
+    });
+});

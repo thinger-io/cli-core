@@ -70,6 +70,18 @@ servers.
   the same name.
 - `resourceHooks` — the CLI's hooks on catalog types (`{ product: {
 afterDelete } }`), run after the core's: see `mcp/resource-hooks.js`.
+- `resourceTypes` — resource types of the CLI's own platform, served by the
+  same `resource_*` tools as the server's: instead of a REST path each has
+  functions for the verbs it supports (`list`, `get`, `create`, `update`,
+  `delete`), its `parent` and `id`, a `schema` and `notes` for
+  `resource_describe`, and `actions` for `resource_call` (`on: 'item'`,
+  `'collection'` or `'either'`). The core checks the parent and id, and
+  searches and pages what `list` returns. See `LocalType` in
+  `mcp/tools-resource.js`.
+- `resourceActions` — actions the CLI adds to the server's types
+  (`{ device: { reboot: { description, run } } }`), run with
+  `resource_call` like the server's. A type or action that clashes with the
+  catalog fails at startup.
 - `mcpInstructions` — server-level guidance sent to MCP clients.
 
 ## MCP tools
