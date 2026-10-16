@@ -12,16 +12,29 @@ It holds everything that is not specific to a product:
   pasted token, OAuth device flow; interactive or fully non-interactive.
 - **Profiles** (`config`) — several servers per CLI, selected by `--profile`,
   `<PREFIX>_PROFILE` or the saved default, and scoped per call
-  (`withActiveProfile`) so concurrent MCP calls don't mix servers.
+  (`withActiveProfile`) so concurrent MCP calls don't mix servers. In CI,
+  `<PREFIX>_SERVER` and `<PREFIX>_TOKEN` stand for a profile without any
+  file.
 - **REST helpers** — `devices`, `property`, `resource`, `bucket`, `product`,
   `profile` (product profiles), `tokens`, `alarms`, `storage`, with every
   account path built in `paths`.
 - **Generic commands** (`cli`, `commands/*`) — login, logout, profile, device,
-  product, bucket, mcp.
-- **MCP** (`mcp/*`) — the stdio server and 23 generic tools: eight
+  product, bucket, dashboard, mcp.
+- **Dashboard apps** (`dashboard`, `dashboard-init`, `dashboard-dev`,
+  `dashboard-sdk`) — create an app from a template of
+  `@thinger-io/dashboard-sdk`, develop it on its own dev server (a link with
+  a temporary token opens the local app against the server), and publish
+  its build to a public storage that dashboards point at, with a warning
+  when its SDK needs a newer server or is not the latest.
+- **Documentation** (`docs`, `docs/`) — the guides for agents: the
+  platform's concepts, product code and server administration (shipped
+  here, marking what needs a given server version), the dashboard SDK's
+  reference and types (from its package: the project's version, else the
+  CLI's), and the CLI's own.
+- **MCP** (`mcp/*`) — the stdio server and 25 generic tools: eight
   `resource_*` tools over a catalog of the server's resource types, and the
   operations that are not CRUD (bucket data, device resources, storage
-  files, dashboard publishing, the server's documentation…), plus that
+  files, dashboard development and publishing, the documentation…), plus that
   documentation as MCP resources.
 - **OpenAPI** (`openapi`) — the server's own API description, cached per
   server and version, with a bundled copy as fallback.
@@ -40,7 +53,7 @@ defineIdentity({
     displayName: 'Acme IoT',
     description: 'CLI for Acme IoT servers',
     configDir: 'acme-cli', // ~/.config/acme-cli/config.json
-    envPrefix: 'ACME', // ACME_PROFILE, ACME_INSECURE
+    envPrefix: 'ACME', // ACME_PROFILE, ACME_INSECURE, ACME_SERVER + ACME_TOKEN
     token: { id: 'acme_cli', name: 'Acme CLI' }, // minted by the password login
     oauth: { clientId: null }, // OAuth device-flow client, if the platform ships one
     defaultServer: null, // suggested by the login prompt
@@ -59,7 +72,7 @@ servers.
 
 `runCli` takes:
 
-- `register(program, { device, product, bucket })` — add top-level commands,
+- `register(program, { device, product, bucket, dashboard })` — add top-level commands,
   or subcommands inside the generic groups.
 - `onNoCommand(program)` — what to do when called without arguments
   (default: help).

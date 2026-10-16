@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.4.0] - 2026-10-16
+
+### Added
+
+- `dashboard init <dir>` and MCP tool `dashboard_init`: a new dashboard app
+  from a template that `@thinger-io/dashboard-sdk` ships (`--template`,
+  React by default), downloaded from npm (latest release, integrity
+  checked, extracted without a `tar` binary) or, offline, taken from the
+  copy cli-core depends on; `--from` takes a version or tag, or a local
+  folder or .tgz of the package. The app gets the SDK as a dependency, the
+  manifest (storage `app_<folder>_<random>`), an AGENTS.md (and CLAUDE.md
+  pointing at it) with the rules of the console's frame and how to review
+  the layout, and with `--ci` a GitHub workflow that publishes it
+  (`npmPackage` in the identity names the CLI it runs).
+- `dashboard dev [url]` and MCP tool `dashboard_dev`: develop a dashboard
+  app on its own dev server (ng serve, Vite…) against a real server. It
+  returns a link to the local app that opens it as a standalone page with
+  the server (`thinger_api`), a temporary full-access token
+  (`dashboard_dev[_<project>]`, 8 h by default, replaced by the next link)
+  and the context of a destination in its fragment. The url must be on
+  this machine unless `--allow-remote` (`allow_remote`); it says when
+  nothing answers there.
+- `dashboard publish [dir]`: the command for `publishApp`, with
+  destinations as `device:<id>`, `dashboard:<id>`…
+- An app's manifest (`<cli>.json`, section `dashboard`: `dir`, `storage`,
+  `prune`, `to`, `dev.url`, `dev.context`, `dev.route`, `dev.hours`) gives
+  these commands their defaults; `dir` must stay inside the manifest's
+  folder and the fields are type-checked.
+- SDK compatibility: publish and dev read the SDK the app is built with
+  (`node_modules/@thinger-io/dashboard-sdk`, from the build or project
+  folder up) and its `compat.json`, and warn when the console gives it no
+  token (SDK before 0.3.0), when the profile's server
+  (`/v1/server/version`) is older than the SDK or some of its calls need,
+  when npm has a newer SDK, or when the page loads the deprecated script
+  build.
+- `<PREFIX>_TOKEN` and `<PREFIX>_SERVER` stand for a profile (CI) unless a
+  profile is named; the token never goes to the identity's default server,
+  and `logout` says so instead of logging out of nothing.
+
+### Changed
+
+- Documentation no longer comes from the server (which stops serving
+  `/sdk/`), with the same ids: the platform's guides (`concepts`,
+  `product-code`, `server-admin`) ship in cli-core (`docs/`), marking what
+  needs a given server version ("since Thinger 7.5"); the dashboard SDK's
+  (`dashboard-sdk`, the reference, and `dashboard-sdk-types`) come from its
+  package: the version installed in the project of the working folder,
+  else the CLI's own (cli-core depends on `@thinger-io/dashboard-sdk`).
+  `doc_read`, the MCP resources and `resource_describe` read them without
+  a request.
+- Preview and dev links refuse a route with `&` or `#`, which could add
+  parameters of its own to the fragment.
+
+### Removed
+
+- `FALLBACK_DOCS` and `validDoc` (docs.js): no document is read from the
+  server.
+- The layout check link of preview links (`layoutUrl`, `LAYOUT_SIZES`):
+  the server retires `/sdk/preview.html`. The AGENTS.md of `dashboard init`
+  says how to review the layout instead.
+
+### Fixed
+
+- The catalog note on dashboards named `target` where `dashboard_publish`
+  takes `to`.
+- `defineCliDocs` files given as `URL` resolve on Windows too.
+
 ## [0.3.0] - 2026-10-14
 
 ### Added
