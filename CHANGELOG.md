@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1] - 2026-10-16
+
+### Fixed
+
+- The SDK compatibility note no longer says an app "will not work" on a
+  server older than the SDK's base (develop builds report 7.3.4-… until
+  7.5 is tagged): the app runs and the SDK only warns, so the note is a
+  warning. What does not work is named per call, from the functions in the
+  package's `compat.json` that need a newer server.
+
 ## [0.4.0] - 2026-10-16
 
 ### Added

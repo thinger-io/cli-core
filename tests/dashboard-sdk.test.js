@@ -28,11 +28,13 @@ describe('dashboard SDK compatibility', () => {
         assert.deepEqual(sdkNotes(sdk('0.3.0'), null, null), []);
     });
 
-    it('flags a server older than the SDK needs, or than some of its calls need', () => {
+    it('warns below the base server, and names the calls a server lacks', () => {
+        const [base] = sdkNotes(sdk('0.3.0'), '7.3.4-159-develop', null);
         assert.match(
-            sdkNotes(sdk('0.3.0'), '7.3.4-152-develop', null)[0],
-            /needs Thinger 7\.5 or later; this server runs 7\.3\.4/,
+            base,
+            /reports 7\.3\.4, older than Thinger 7\.5, the base of SDK 0\.3\.0: the app runs/,
         );
+        assert.doesNotMatch(base, /will not work/);
         const notes = sdkNotes(
             sdk('0.3.1', {
                 baseServer: '7.5',
@@ -41,9 +43,9 @@ describe('dashboard SDK compatibility', () => {
             '7.5.2',
             null,
         );
-        assert.equal(notes.length, 1);
-        assert.match(notes[0], /alarms\.rules\.get \(7\.6\)/);
-        assert.doesNotMatch(notes[0], /devices\.list/);
+        assert.deepEqual(notes, [
+            "alarms.rules.get requires Thinger 7.6 or later (this server is 7.5.2): the app's calls to it fail here.",
+        ]);
     });
 
     it('flags an SDK the console gives no token to', () => {
