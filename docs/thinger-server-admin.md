@@ -3,7 +3,7 @@
 For agents acting as a server **admin**: host settings, domains and brands, user accounts,
 OAuth clients, identity providers and proxies. Every route here needs an admin session or
 token. Read the OpenAPI document for each body; this guide covers what the schemas cannot say:
-order of steps, side effects and risks. It describes Thinger 7.5; what needs a later version says
+order of steps, side effects and risks. It describes Thinger 7.4; what needs a later version says
 "since Thinger X" (a server's version: `GET /v1/server/version`).
 
 Before changing anything, read the current value and tell the user what will change. Several
@@ -38,7 +38,7 @@ self-hosted server raise `accounts.limits.<collection>.max_count` (`projects`,
 brands limits are not shown by `GET settings`.
 
 On cloud instances the plan owns `accounts.limits.{accounts,brands,domains,members}`, `database`,
-`plugins`, `rate_limiter` and `http_server.hosts`: since Thinger 7.5, writing them returns 403.
+`plugins`, `rate_limiter` and `http_server.hosts`: since Thinger 7.4, writing them returns 403.
 To raise them, the customer changes the plan.
 
 ## Custom domain with its own brand

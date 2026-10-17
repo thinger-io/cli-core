@@ -1,8 +1,8 @@
 # Thinger concepts
 
 How a Thinger.io account is organized, for agents that create resources, dashboards or
-alarms. It describes Thinger 7.5: what needs a later version says "since Thinger X", and what
-older servers lack says "since Thinger 7.5" (a server's version: `GET /v1/server/version`).
+alarms. It describes Thinger 7.4: what needs a later version says "since Thinger X", and what
+older servers lack says "since Thinger 7.4" (a server's version: `GET /v1/server/version`).
 `GET /v1/server/events` lists the live events; the OpenAPI document lists every route. Related
 guides: product code (document `product-code`) and server administration (document
 `server-admin`). The dashboard SDK is the npm package `@thinger-io/dashboard-sdk`, documented in
@@ -37,7 +37,7 @@ A **project** groups resources of the account so they can be shared and browsed 
   of the project's devices, and asking for another device is refused. It needs the bucket to
   carry a `device` tag (product buckets do); a bucket without it is not filtered. A project with
   no devices reads such a bucket as empty. It is **on by default for new projects** since Thinger
-  7.5 (send
+  7.4 (send
   `config: {limit_bucket_access: false}` to opt out); for older projects, turn it on with
   `PUT /v1/users/<u>/projects/<p>` and `{config: {limit_bucket_access: true}}`, especially before
   sharing a project with members or public tokens.
@@ -159,7 +159,7 @@ Records get a `device` field; the bucket is created on the first write.
 
 **Field names**: `ts` is the record time. In MongoDB buckets `tags` and `_id` are reserved (they
 hold the record's tags and id): a record with a field of that name is refused, so rename it
-(`tag_count`, …). Since Thinger 7.5 the refusal names the field.
+(`tag_count`, …). Since Thinger 7.4 the refusal names the field.
 
 **Reading** (`GET /v2/users/<u>/buckets/<b>/data`, or the SDK's `buckets.read`): records come as
 `{ ts, ...fields }`, newest first. Query: `min_ts` / `max_ts` (ms), `items` (default 50, **at most
@@ -218,7 +218,7 @@ when null matters.
 
 ## Geofences
 
-Since Thinger 7.5. The server checks geofences natively: do not compute zone entries and exits in your own code. A
+Since Thinger 7.4. The server checks geofences natively: do not compute zone entries and exits in your own code. A
 property `geofences` on the device, or inherited from its type, group or product, holds a GeoJSON
 `FeatureCollection`. Each `Feature` is a `Polygon`, or a `Point` with `properties.radius` in
 meters. **Coordinates are `[lon, lat]`**, as in GeoJSON (the `location` property is `{lat, lon}`).
@@ -322,7 +322,7 @@ of the device.
   list, a field of the listed documents (nested ones with dots) filters by exact value (numbers
   as numbers, `true` / `false` also as booleans: `?connection.active=true` for connected devices),
   and a repeated parameter matches any of its values (nested fields and booleans since Thinger
-  7.5). Instance `state` values:
+  7.4). Instance `state` values:
   0 none, 1 activated, 2 acknowledged, 3 latched, 4 shelved, 5 cleared. `severity` values:
   0 none, 1 low, 2 medium, 3 high, 4 critical.
 - Notifications on activation, normalization and reminders call **endpoints**:
@@ -330,7 +330,7 @@ of the device.
   (`name`, `severity`, `state`, `origin.id` = device, `evaluation.last_values`, `notification.type`…).
 - Test a rule, a single source or a notification before saving with
   `POST …/alarms/rules/<r>/test-rule`, `/test-source` and `/test-notification`. `test-rule` and
-  `test-source` work before the rule exists (any new id; since Thinger 7.5); `test-source` takes a `check_interval`
+  `test-source` work before the rule exists (any new id; since Thinger 7.4); `test-source` takes a `check_interval`
   for bucket sources without aggregation (default: the rule's, or 1 minute).
 
 ## Endpoints, storages, tokens

@@ -2,14 +2,14 @@
 
 JavaScript that a product's profile calls to compute, transform or route data for its devices:
 resource values (including simulated devices), payload transforms, the device a product call is
-for. Platform concepts: the document `concepts`. It describes Thinger 7.5; what needs a later
+for. Platform concepts: the document `concepts`. It describes Thinger 7.4; what needs a later
 version says "since Thinger X" (a server's version: `GET /v1/server/version`).
 
 ## Where it lives
 
 `PUT /v1/users/{user}/products/{product}/profile/code` with
 `{ "code": "<JavaScript>", "storage": "" }`, or `{ "storage": "<storage id>" }` to load
-`<storage>/index.js` from a file storage (with its `node_modules`). Since Thinger 7.5, add
+`<storage>/index.js` from a file storage (with its `node_modules`). Since Thinger 7.4, add
 `"path": "<folder>"` to
 load `<storage>/<folder>/index.js` (and that folder's `node_modules`) instead: one storage can then
 hold a whole application, e.g. the dashboard in `app/` and each product's code in

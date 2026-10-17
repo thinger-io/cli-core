@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.2] - 2026-10-17
+
+### Fixed
+
+- The dashboard SDK ships with Thinger 7.4, not 7.5: the platform guides
+  mark as "since Thinger 7.4" what older servers lack, and the catalog
+  notes name Thinger 7.4 instead of develop builds (7.3.4-…). The SDK's
+  own base server keeps coming from its `compat.json`.
+
 ## [0.4.1] - 2026-10-16
 
 ### Fixed
